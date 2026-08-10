@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>Local LLM Gateway</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <!--
+      WORLD: A modern model-serving instrument bench, built for classroom operation.
+      VIEWPORT: Thread rail, transcript work surface, and calibrated diagnostics.
+      PATH: Select state, send work, watch delivery, inspect the measured result.
+      INTERACTION: Live deltas and explicit terminal states reveal the request lifecycle.
+      BOUNDARY: Product facts come from gateway APIs; the client invents no telemetry.
+    -->
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="product-lockup">
+          <span class="signal-mark" aria-hidden="true"></span>
+          <div>
+            <h1>Local LLM Gateway</h1>
+            <p id="runtime-line">Checking runtime</p>
+          </div>
+        </div>
+        <div class="runtime-state" id="runtime-state" data-state="loading" role="status">
+          <span class="state-light" aria-hidden="true"></span>
+          <span id="runtime-label">Checking</span>
+        </div>
+      </header>
+
+      <aside class="thread-rail" aria-label="Conversation threads">
+        <div class="rail-heading">
+          <h2>Threads</h2>
+          <button class="button button-primary button-small" id="new-thread" type="button">
+            New thread
+          </button>
+        </div>
+        <div class="thread-list" id="thread-list" role="list"></div>
+        <div class="rail-footer">
+          <span>Owner</span>
+          <code>student-01</code>
+        </div>
+      </aside>
+
+      <main class="conversation" aria-labelledby="thread-title">
+        <div class="conversation-header">
+          <div>
+            <h2 id="thread-title">No thread selected</h2>
+            <p id="thread-meta">Create a thread to begin.</p>
+          </div>
+          <button
+            class="button button-danger button-small"
+            id="delete-thread"
+            type="button"
+            disabled
+          >
+            Delete
+          </button>
+        </div>
+
+        <section class="transcript" id="transcript" aria-live="polite">
+          <div class="empty-state" id="empty-state">
+            <strong>No active conversation</strong>
+            <button class="button button-primary" id="empty-new-thread" type="button">
+              New thread
+            </button>
+          </div>
+        </section>
+
+        <form class="composer" id="composer">
+          <label for="message-input">Message</label>
+          <textarea
+            id="message-input"
+            name="message"
+            rows="3"
+            maxlength="20000"
+            placeholder="Ask the local model"
+            disabled
+            required
+          ></textarea>
+          <div class="composer-actions">
+            <div class="segmented" aria-label="Delivery mode">
+              <button class="segment is-active" id="mode-stream" type="button" aria-pressed="true">
+                Stream
+              </button>
+              <button class="segment" id="mode-complete" type="button" aria-pressed="false">
+                Complete
+              </button>
+            </div>
+            <div class="command-group">
+              <span class="composer-status" id="composer-status" role="status">Idle</span>
+              <button class="button button-secondary" id="stop-button" type="button" hidden>
+                Stop
+              </button>
+              <button class="button button-primary" id="send-button" type="submit" disabled>
+                Send
+              </button>
+            </div>
+          </div>
+        </form>
+      </main>
+
+      <aside class="diagnostics" aria-label="Request diagnostics">
+        <div class="diagnostic-heading">
+          <h2>Diagnostics</h2>
+          <a href="/metrics" target="_blank" rel="noreferrer">Raw metrics</a>
+        </div>
+
+        <section class="instrument-group" aria-labelledby="runtime-heading">
+          <h3 id="runtime-heading">Runtime</h3>
+          <dl class="readouts">
+            <div><dt>Provider</dt><dd id="provider-value">Pending</dd></div>
+            <div><dt>Model</dt><dd id="model-value">Pending</dd></div>
+            <div><dt>Readiness</dt><dd id="readiness-value">Checking</dd></div>
+          </dl>
+        </section>
+
+        <section class="instrument-group" aria-labelledby="context-heading">
+          <h3 id="context-heading">Context</h3>
+          <dl class="readouts">
+            <div><dt>Input estimate</dt><dd id="input-token-value">Pending</dd></div>
+            <div><dt>Included messages</dt><dd id="included-value">Pending</dd></div>
+            <div><dt>Summary cursor</dt><dd id="cursor-value">Pending</dd></div>
+            <div><dt>Last compaction</dt><dd id="compaction-value">None</dd></div>
+          </dl>
+        </section>
+
+        <section class="instrument-group" aria-labelledby="delivery-heading">
+          <h3 id="delivery-heading">Delivery</h3>
+          <dl class="readouts">
+            <div><dt>Mode</dt><dd id="mode-value">Stream</dd></div>
+            <div><dt>First token</dt><dd id="ttft-value">Pending</dd></div>
+            <div><dt>Duration</dt><dd id="duration-value">Pending</dd></div>
+            <div><dt>Output tokens</dt><dd id="output-token-value">Pending</dd></div>
+          </dl>
+        </section>
+
+        <div class="event-register">
+          <span>Last event</span>
+          <code id="event-value">standby</code>
+        </div>
+      </aside>
+    </div>
+
+    <div class="toast" id="toast" role="alert" hidden></div>
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>

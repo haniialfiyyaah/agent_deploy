@@ -1,0 +1,7 @@
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+  "live: requires API_KEY and AGENT_MODEL and calls the external Responses API",
+]

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Northstar Agent Operations</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Northstar Market · Deployment Lab</p>
+        <h1>Agent Operations Console</h1>
+      </div>
+      <div class="top-actions">
+        <span id="health" class="health" data-state="checking">Checking readiness</span>
+        <a class="docs-link" href="/docs" target="_blank" rel="noreferrer">Open Swagger ↗</a>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="request-panel">
+        <div class="section-heading">
+          <div>
+            <span>01</span>
+            <h2>Customer request</h2>
+          </div>
+          <strong id="run-state" data-state="idle">IDLE</strong>
+        </div>
+
+        <form id="run-form">
+          <div class="field-grid">
+            <label>
+              Customer session
+              <select id="customer">
+                <option value="">Anonymous</option>
+                <option value="CUST-100">CUST-100 · authenticated</option>
+                <option value="CUST-200">CUST-200 · authenticated</option>
+                <option value="CUST-300">CUST-300 · unauthenticated</option>
+              </select>
+            </label>
+            <label>
+              Request category
+              <select id="category">
+                <option value="delivery">Delivery</option>
+                <option value="returns">Returns</option>
+                <option value="damage">Damaged item</option>
+                <option value="warranty">Warranty</option>
+                <option value="order_status">Order status</option>
+                <option value="general">General support</option>
+              </select>
+            </label>
+          </div>
+          <label class="message-field">
+            Message
+            <textarea id="message" rows="6" maxlength="4000" required>How long does standard delivery normally take?</textarea>
+          </label>
+          <label class="permission">
+            <input id="allow-ticket" type="checkbox" />
+            <span>
+              <strong>Allow ticket creation for this run</strong>
+              The application—not the model—grants this scoped permission.
+            </span>
+          </label>
+          <div class="form-actions">
+            <button id="run-button" class="primary" type="submit">Run agent</button>
+            <button id="cancel-button" class="secondary" type="button" disabled>Cancel run</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="answer-panel">
+        <div class="section-heading">
+          <div><span>02</span><h2>Agent response</h2></div>
+          <code id="run-id">no run</code>
+        </div>
+        <article id="answer" class="answer empty">Submit a request to see the grounded response.</article>
+        <dl class="metrics">
+          <div><dt>Model</dt><dd id="model">—</dd></div>
+          <div><dt>Version</dt><dd id="version">—</dd></div>
+          <div><dt>Latency</dt><dd id="latency">—</dd></div>
+          <div><dt>Tokens</dt><dd id="tokens">—</dd></div>
+          <div><dt>Est. cost</dt><dd id="cost">—</dd></div>
+        </dl>
+      </section>
+
+      <section class="timeline-panel">
+        <div class="section-heading">
+          <div><span>03</span><h2>Sanitized activity</h2></div>
+          <small>No hidden reasoning is displayed</small>
+        </div>
+        <ol id="timeline" class="timeline">
+          <li class="timeline-empty">Run events and safe tool evidence appear here.</li>
+        </ol>
+      </section>
+    </main>
+
+    <div id="toast" class="toast" hidden></div>
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>

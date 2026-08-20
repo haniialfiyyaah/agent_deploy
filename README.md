@@ -17,19 +17,6 @@ Pada akhir hands-on, Anda akan memiliki:
 - Public Render service
 - Evidence dari successful release, failed release, dan recovery
 
-## Estimasi Waktu
-
-| Bagian | Durasi |
-|---|---:|
-| Inspect dan setup | 20 menit |
-| Live tests dan local API | 30 menit |
-| UI dan Swagger verification | 20 menit |
-| Docker build dan container test | 30 menit |
-| Registry dan Render deployment | 30–45 menit |
-| Failure dan recovery exercise | 20 menit |
-
-Cold start, image upload, model latency, atau rate limit dapat menambah waktu.
-
 ## Prerequisites
 
 Pastikan Anda memiliki:
@@ -133,7 +120,7 @@ PowerShell:
 
 ```powershell
 python -m venv .venv
-.venv\Scripts\Activate.ps1
+.venv\Scripts\Activate.bat
 python -m pip install -r requirements.txt
 Copy-Item .env.example .env
 ```

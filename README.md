@@ -1,4 +1,14 @@
-# Participant Run-Through Guide — Deploying the Northstar LLM Agent
+# Week 07 - Day 02: Model Serving and Production Grade Deployment
+
+[![Phase](https://img.shields.io/badge/phase-2_applied_ai-blue.svg)](#)
+[![Week](https://img.shields.io/badge/week-7_fine_tuning_and_production_systems-orange.svg)](#)
+[![Day](https://img.shields.io/badge/day-2_model_serving_and_production_grade_deployment-green.svg)](#)
+[![Python Manager](https://img.shields.io/badge/python_manager-uv-purple.svg)](https://github.com/astral-sh/uv)
+[![Python](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
+[![Docker](https://img.shields.io/badge/docker-container-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com/)
+[![FastAPI](https://img.shields.io/badge/framework-fastapi-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+
+## Deploying the Northstar LLM Agent
 
 Panduan ini membawa Anda dari source code agent sampai public deployment yang dapat diuji dan dipulihkan. Ikuti langkah secara berurutan karena evidence dari satu tahap akan dipakai pada tahap berikutnya.
 
@@ -22,6 +32,7 @@ Pada akhir hands-on, Anda akan memiliki:
 Pastikan Anda memiliki:
 
 - Python 3.11 atau lebih baru
+- `uv` (package manager Python)
 - Git repository bootcamp ini
 - Docker Desktop atau Docker Engine yang sedang berjalan
 - Valid `API_KEY`
@@ -34,22 +45,16 @@ Instructor harus sudah mengonfirmasi model access, quota, rate limit, dan budget
 
 ## System yang Akan Dibangun
 
-```text
-Browser UI / Swagger
-        |
-        v
-FastAPI run service
-        |
-        v
-Northstar agent loop ----> Responses-compatible model API
-        |
-        +----> policy search
-        +----> owned-order lookup
-        +----> scoped ticket creation
-        +----> human escalation
-        |
-        v
-Sanitized events + SQLite telemetry
+```mermaid
+flowchart TD
+    A["Browser UI / Swagger"] --> B["FastAPI Run Service"]
+    B --> C["Northstar Agent Loop"]
+    C --> D["Responses-Compatible Model API"]
+    C --> E1["Policy Search Tool"]
+    C --> E2["Owned-Order Lookup Tool"]
+    C --> E3["Scoped Ticket Creation Tool"]
+    C --> E4["Human Escalation Tool"]
+    C --> F["Sanitized Events + SQLite Telemetry"]
 ```
 
 FastAPI menyediakan endpoint berikut:
@@ -103,6 +108,7 @@ find app src data scripts tests -maxdepth 2 -type f
 | `app/static/` | Browser UI tanpa model credential |
 | `tests/` | Bounded live model scenarios |
 | `Dockerfile` | Non-root immutable runtime image |
+| `pyproject.toml` | Konfigurasi proyek dan dependensi uv |
 
 > **Checkpoint 1:** Anda dapat menjelaskan mengapa browser memanggil FastAPI, bukan model provider secara langsung.
 
@@ -112,25 +118,21 @@ find app src data scripts tests -maxdepth 2 -type f
 
 ### Tujuan
 
-Menginstal dependency dan menyediakan credential hanya melalui runtime environment.
+Menginstal dependency dengan `uv` dan menyediakan credential hanya melalui runtime environment.
 
-### Buat virtual environment
+### Penyiapan Environment dengan `uv`
 
 PowerShell:
 
 ```powershell
-python -m venv .venv
-.venv\Scripts\Activate.bat
-python -m pip install -r requirements.txt
+uv sync
 Copy-Item .env.example .env
 ```
 
 macOS/Linux:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements.txt
+uv sync
 cp .env.example .env
 ```
 
@@ -155,7 +157,7 @@ Rate cost bersifat opsional dan hanya dipakai untuk estimated cost. Gunakan rate
 ### Verify configuration tanpa menampilkan key
 
 ```bash
-python -c "from src.config import load_model_settings; print(load_model_settings().agent_model)"
+uv run python -c "from src.config import load_model_settings; print(load_model_settings().agent_model)"
 ```
 
 **Expected result:** Hanya model identifier yang tercetak.
@@ -166,9 +168,8 @@ python -c "from src.config import load_model_settings; print(load_model_settings
 
 | Problem | Resolution |
 |---|---|
-| `python` tidak ditemukan | Install Python 3.11+ atau gunakan launcher yang disediakan instructor |
-| PowerShell memblokir activation | Ikuti execution-policy guidance dari instructor atau gunakan Command Prompt |
-| `ModuleNotFoundError` | Pastikan `.venv` aktif lalu ulangi dependency installation |
+| `uv` atau `python` tidak ditemukan | Install `uv` / Python 3.11+ atau gunakan launcher yang disediakan instructor |
+| `ModuleNotFoundError` | Jalankan `uv sync` untuk menyinkronkan seluruh dependensi |
 | Missing `API_KEY` atau `AGENT_MODEL` | Periksa nama variable di `.env`; tidak ada fallback runtime |
 
 ---
@@ -182,7 +183,7 @@ Membuktikan policy retrieval, ownership, ticket permission, dan FastAPI lifecycl
 ### Initialize data
 
 ```bash
-python -m src.setup_lab --reset
+uv run python -m src.setup_lab --reset
 ```
 
 Representative setup output:
@@ -196,7 +197,7 @@ Northstar healthy and stale knowledge-base versions are ready.
 ### Jalankan bounded live suite
 
 ```bash
-pytest -m live -q
+uv run pytest -m live -q
 ```
 
 Suite menjalankan empat live scenarios:
@@ -233,7 +234,7 @@ Menjalankan local API dan membedakan liveness, readiness, serta paid live smoke 
 ### Start server
 
 ```bash
-uvicorn app.main:app --reload
+uv run uvicorn app.main:app --reload
 ```
 
 Biarkan terminal ini tetap berjalan. Buka URL berikut:
@@ -474,10 +475,10 @@ Kemudian buka `http://127.0.0.1:8001`.
 
 Menghubungkan image identity dengan satu bounded live behavior check.
 
-Buka terminal kedua, aktifkan `.venv`, lalu jalankan:
+Buka terminal kedua, lalu jalankan:
 
 ```bash
-python scripts/smoke_test.py --base-url http://127.0.0.1:8000
+uv run python scripts/smoke_test.py --base-url http://127.0.0.1:8000
 ```
 
 Smoke test memeriksa:
@@ -559,7 +560,7 @@ Setelah deploy selesai, buka:
 Jalankan public smoke test:
 
 ```bash
-python scripts/smoke_test.py --base-url https://<service>.onrender.com
+uv run python scripts/smoke_test.py --base-url https://<service>.onrender.com
 ```
 
 > **Checkpoint 11:** Catat public URL, public run ID, model, app version, image identity, dan smoke-test evidence.
@@ -618,7 +619,7 @@ Render dapat mempertahankan previous healthy deployment ketika release baru gaga
 5. Jalankan tepat satu recovery smoke test:
 
 ```bash
-python scripts/smoke_test.py --base-url https://<service>.onrender.com
+uv run python scripts/smoke_test.py --base-url https://<service>.onrender.com
 ```
 
 **Expected result:** Bad release gagal readiness dan known-good release kembali menyelesaikan public agent run.

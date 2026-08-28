@@ -1,3 +1,26 @@
+[project]
+name = "p2w7d2-model-serving-and-production-grade-deployment"
+version = "0.1.0"
+description = "Phase 2 Week 7 Day 2: Deploying the Northstar LLM Agent with FastAPI, Docker, and Render"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115.0",
+    "httpx>=0.27.0",
+    "openai>=2.0.0",
+    "pydantic>=2.9.0",
+    "python-dotenv>=1.0.0",
+    "uvicorn[standard]>=0.30.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.2.0",
+]
+
+[tool.uv]
+package = false
+
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]

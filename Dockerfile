@@ -11,8 +11,8 @@ WORKDIR /app
 
 RUN addgroup --system northstar && adduser --system --ingroup northstar northstar
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY pyproject.toml ./
+RUN pip install --no-cache-dir .
 
 COPY --chown=northstar:northstar app ./app
 COPY --chown=northstar:northstar src ./src

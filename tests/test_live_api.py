@@ -21,15 +21,19 @@ def test_live_fastapi_run_reaches_terminal_state(api_client) -> None:
     )
     assert response.status_code == 202
     accepted = response.json()
-    deadline = time.monotonic() + 150
-    snapshot = None
-    while time.monotonic() < deadline:
-        snapshot_response = api_client.get(accepted["status_url"])
-        assert snapshot_response.status_code == 200
-        snapshot = snapshot_response.json()
-        if snapshot["status"] in {"completed", "failed", "cancelled"}:
-            break
-        time.sleep(0.5)
+    inline_snapshot = accepted.get("snapshot")
+    if inline_snapshot and inline_snapshot.get("status") in {"completed", "failed", "cancelled"}:
+        snapshot = inline_snapshot
+    else:
+        deadline = time.monotonic() + 150
+        snapshot = None
+        while time.monotonic() < deadline:
+            snapshot_response = api_client.get(accepted["status_url"])
+            assert snapshot_response.status_code == 200
+            snapshot = snapshot_response.json()
+            if snapshot["status"] in {"completed", "failed", "cancelled"}:
+                break
+            time.sleep(0.5)
     assert snapshot is not None
     assert snapshot["status"] == "completed"
     assert snapshot["result"]["output"]

@@ -79,12 +79,26 @@ class RunManager:
         self._runs: dict[str, ManagedRun] = {}
         self._lock = threading.RLock()
 
-    def submit(self, request: AgentRequest, settings: ModelSettings) -> ManagedRun:
+    def submit(self, request: AgentRequest, settings: ModelSettings, inline: bool = False) -> ManagedRun:
         managed = ManagedRun(run_id=str(uuid.uuid4()), request=request)
         with self._lock:
             self._runs[managed.run_id] = managed
             self._append_event(managed, "run.queued", {"status": "queued"})
-        LOGGER.info(json.dumps({"event": "run.submitted", "run_id": managed.run_id, "category": request.category}))
+        LOGGER.info(
+            json.dumps(
+                {
+                    "event": "run.submitted",
+                    "run_id": managed.run_id,
+                    "category": request.category,
+                    "inline": inline,
+                }
+            )
+        )
+        # Vercel freezes the function after the response, so the model call has to
+        # finish before POST returns. Local and Render keep the background thread.
+        if inline:
+            self._execute(managed.run_id, settings)
+            return managed
         thread = threading.Thread(
             target=self._execute,
             args=(managed.run_id, settings),

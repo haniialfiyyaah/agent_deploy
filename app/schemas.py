@@ -31,6 +31,9 @@ class RunAccepted(BaseModel):
     status: RunStatus
     status_url: str
     events_url: str
+    # Filled when the run finishes inside the request (Vercel). Local runs leave these empty.
+    snapshot: dict | None = None
+    events: list | None = None
 
 
 class CancellationResponse(BaseModel):

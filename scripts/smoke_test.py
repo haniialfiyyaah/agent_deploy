@@ -12,7 +12,8 @@ def main() -> None:
     parser.add_argument("--timeout", type=int, default=150)
     args = parser.parse_args()
     base = args.base_url.rstrip("/")
-    with httpx.Client(timeout=30.0) as client:
+    # The Vercel path finishes the model call inside POST, so this must outlast that call.
+    with httpx.Client(timeout=args.timeout) as client:
         ready = client.get(f"{base}/health/ready")
         ready.raise_for_status()
         accepted = client.post(
@@ -24,7 +25,14 @@ def main() -> None:
             },
         )
         accepted.raise_for_status()
-        status_url = f"{base}{accepted.json()['status_url']}"
+        payload = accepted.json()
+        inline_snapshot = payload.get("snapshot")
+        if inline_snapshot and inline_snapshot.get("status") in {"completed", "failed", "cancelled"}:
+            print(inline_snapshot)
+            if inline_snapshot["status"] != "completed":
+                raise SystemExit(1)
+            return
+        status_url = f"{base}{payload['status_url']}"
         deadline = time.monotonic() + args.timeout
         while time.monotonic() < deadline:
             snapshot = client.get(status_url).json()

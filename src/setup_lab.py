@@ -4,11 +4,11 @@ import argparse
 import json
 from pathlib import Path
 
-from src.config import APP_DB, DATA_DIR, TELEMETRY_DB
+from src.config import APP_DB, KB_DIR, TELEMETRY_DB
 from src.db import connect, create_app_schema, create_telemetry_schema
 
 
-KB_ROOT = DATA_DIR / "kb"
+KB_ROOT = KB_DIR
 MANIFEST = KB_ROOT / "manifest.json"
 
 

@@ -8,7 +8,25 @@ from dotenv import find_dotenv, load_dotenv
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DATA_DIR = Path(os.getenv("DATA_DIR", str(PROJECT_ROOT / "data")))
+# Markdown knowledge base ships with the repo and stays readable on Vercel.
+KB_DIR = PROJECT_ROOT / "data" / "kb"
+
+
+def running_on_vercel() -> bool:
+    return os.getenv("VERCEL") == "1"
+
+
+def _resolve_data_dir() -> Path:
+    configured = os.getenv("DATA_DIR")
+    if configured:
+        return Path(configured)
+    # Vercel can write only under /tmp. Local and Render keep the repo data dir.
+    if running_on_vercel():
+        return Path("/tmp/northstar")
+    return PROJECT_ROOT / "data"
+
+
+DATA_DIR = _resolve_data_dir()
 APP_DB = DATA_DIR / "customer_service.db"
 TELEMETRY_DB = DATA_DIR / "telemetry.db"
 

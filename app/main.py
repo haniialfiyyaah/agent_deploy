@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.schemas import CancellationResponse, RunAccepted, RunCreate
 from app.service import RunManager, TERMINAL
-from src.config import APP_DB, app_version, load_model_settings, readiness_forced_down
+from src.config import APP_DB, app_version, load_model_settings, readiness_forced_down, running_on_vercel
 from src.models import AgentRequest
 from src.setup_lab import setup
 
@@ -34,6 +34,10 @@ app = FastAPI(
     lifespan=lifespan,
 )
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+# Vercel's Python runtime does not always run the ASGI lifespan before the first request.
+if running_on_vercel():
+    setup(reset=False)
 
 
 @app.get("/", include_in_schema=False)
@@ -91,12 +95,21 @@ async def submit_run(payload: RunCreate) -> RunAccepted:
         allow_ticket_creation=payload.allow_ticket_creation,
         expected_document_ids=payload.expected_document_ids,
     )
-    managed = manager.submit(request, settings)
+    # Finish the model call before responding on Vercel. A daemon thread would be frozen.
+    inline = running_on_vercel()
+    if inline:
+        managed = await asyncio.to_thread(manager.submit, request, settings, True)
+    else:
+        managed = manager.submit(request, settings)
+    snapshot = manager.snapshot(managed.run_id) if inline else None
+    stored_events = manager.events_after(managed.run_id, 0) if inline else None
     return RunAccepted(
         run_id=managed.run_id,
-        status="queued",
+        status=managed.status if inline else "queued",
         status_url=f"/v1/runs/{managed.run_id}",
         events_url=f"/v1/runs/{managed.run_id}/events",
+        snapshot=snapshot,
+        events=stored_events[0] if stored_events else None,
     )
 
 

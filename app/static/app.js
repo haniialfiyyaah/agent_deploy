@@ -138,7 +138,24 @@ form.addEventListener("submit", async (event) => {
     });
     activeRunId = accepted.run_id;
     runIdView.textContent = activeRunId;
-    connectEvents(accepted.events_url);
+    const finished = ["completed", "failed", "cancelled"].includes(accepted.status);
+    if (finished && accepted.snapshot) {
+      if (accepted.events) {
+        timeline.replaceChildren();
+        for (const item of accepted.events) addEvent(item);
+      }
+      setState(accepted.snapshot.status);
+      if (accepted.snapshot.result) {
+        const result = accepted.snapshot.result;
+        answer.classList.remove("empty");
+        answer.textContent = result.output;
+        latencyView.textContent = `${Math.round(result.latency_ms)} ms`;
+        tokensView.textContent = `${result.input_tokens} in / ${result.output_tokens} out`;
+        costView.textContent = `$${Number(result.estimated_cost_usd).toFixed(6)}`;
+      }
+    } else {
+      connectEvents(accepted.events_url);
+    }
   } catch (error) {
     setState("failed");
     notify(`Run submission failed: ${error.message}`);
